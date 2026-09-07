@@ -9,30 +9,46 @@
 <body>
   <main class="page-shell">
     <section class="profile-card" aria-label="Candidate profile">
-      <div class="cover-banner" role="img" aria-label="Candidate campaign banner"></div>
+      <div id="campaignBanner" class="cover-banner" role="img" aria-label="Candidate campaign banner"></div>
+
       <div class="profile-header">
-        <img id="candidateAvatar" class="avatar" src="images/candidate_avatar.svg" alt="Alex Morgan" />
+        <img id="candidateAvatar" class="avatar" src="images/candidate_avatar_realistic.jpg" alt="Alex Morgan" />
+
         <div class="profile-main">
           <div class="profile-name-row">
             <h1 id="candidateName">Alex Morgan</h1>
             <span id="candidateVerified" class="verified" aria-label="Verified candidate">✓</span>
           </div>
-          <div id="candidateHandle" class="handle">@AlexMorgan</div>
+          <div class="profile-handle-row">
+            <span id="candidateHandle" class="handle">@AlexMorgan</span>
+            <span class="profile-divider">·</span>
+            <span id="candidateParty" class="party-label">Democrat</span>
+          </div>
           <p id="candidateBio" class="bio"></p>
           <div id="candidateMeta" class="profile-meta"></div>
         </div>
+
         <button id="followButton" class="follow-button" type="button">Follow</button>
       </div>
+
       <div class="profile-stats" role="list" aria-label="Candidate statistics">
         <div class="stat" role="listitem"><strong id="followingCount">—</strong><span>Following</span></div>
         <div class="stat" role="listitem"><strong id="followersCount">—</strong><span>Followers</span></div>
         <div class="stat" role="listitem"><strong id="postCount">—</strong><span>Posts</span></div>
+        <div class="profile-joined"><span id="candidateJoined">—</span></div>
       </div>
+
+      <nav class="profile-tabs" aria-label="Profile sections">
+        <button class="profile-tab active" type="button">Posts</button>
+        <button class="profile-tab" type="button">About</button>
+        <button class="profile-tab" type="button">Media</button>
+      </nav>
     </section>
 
     <section class="feed-card" aria-label="Candidate posts">
       <div class="feed-heading">
         <h2>Posts</h2>
+        <span>Most recent</span>
       </div>
       <div id="feed" class="feed" aria-live="polite"></div>
     </section>
