@@ -1,280 +1,229 @@
-const APP_VERSION = "candidate-feed-v1";
-const app = document.getElementById("app");
-const params = new URLSearchParams(window.location.search);
-const requestedCondition = params.get("condition") || "policy_weighted";
-const respondentId = params.get("rid") || params.get("responseId") || `local-${Math.random().toString(36).slice(2, 9)}`;
-const candidateId = params.get("candidate") || "alex-morgan";
+(function () {
+  "use strict";
 
-let candidate = null;
-let posts = [];
-let state = {
-  startedAt: Date.now(),
-  openPosts: {},
-  comments: {},
-  followed: false
-};
+  const state = {
+    sessionId: "session-" + Math.random().toString(36).slice(2, 11),
+    startTime: Date.now(),
+    openedPosts: new Set(),
+    followed: false,
+    events: []
+  };
 
-function postToQualtrics(event, payload = {}) {
-  window.parent.postMessage({
-    source: APP_VERSION,
-    type: "EXPERIMENT_EVENT",
-    event,
-    respondentId,
-    candidateId,
-    condition: activeCondition,
-    timestamp: Date.now(),
-    ...payload
-  }, "*");
-}
+  function sendEvent(event, details = {}) {
+    const payload = {
+      type: "CANDIDATE_FEED_EVENT",
+      event,
+      sessionId: state.sessionId,
+      timestamp: new Date().toISOString(),
+      ...details
+    };
 
-function safeText(value) {
-  return String(value ?? "");
-}
+    state.events.push(payload);
 
-function initials(name) {
-  return safeText(name)
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(w => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function colorFromName(name) {
-  const colors = [
-    "linear-gradient(135deg,#2457d6,#6d8fe8)",
-    "linear-gradient(135deg,#345c9f,#7aa0d8)",
-    "linear-gradient(135deg,#4b5563,#94a3b8)",
-    "linear-gradient(135deg,#7a4f9b,#ba85d1)",
-    "linear-gradient(135deg,#8d5c35,#d09c6b)"
-  ];
-  return colors[(safeText(name).charCodeAt(0) || 0) % colors.length];
-}
-
-function escapeHtml(value) {
-  return safeText(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function getConfigForCondition(postsData, condition) {
-  const configs = postsData.feeds || {};
-  return configs[condition] || configs.policy_weighted || Object.keys(configs)[0];
-}
-
-function getPostById(id) {
-  return posts.find(p => p.id === id);
-}
-
-let activeCondition = requestedCondition;
-
-async function boot() {
-  try {
-    const [candidateResp, stimuliResp] = await Promise.all([
-      fetch("data/candidate.json"),
-      fetch("data/stimuli.json")
-    ]);
-
-    if (!candidateResp.ok || !stimuliResp.ok) throw new Error("Unable to load experiment data.");
-
-    const candidateData = await candidateResp.json();
-    const stimuliData = await stimuliResp.json();
-
-    candidate = candidateData.candidates.find(c => c.id === candidateId) || candidateData.candidates[0];
-    const feedConfig = getConfigForCondition(stimuliData, activeCondition);
-    activeCondition = feedConfig.condition;
-
-    const byId = new Map(stimuliData.messages.map(p => [p.id, p]));
-    posts = feedConfig.sequence.map(id => byId.get(id)).filter(Boolean);
-
-    renderPage();
-    postToQualtrics("exposure_start", {
-      feedMessageCount: posts.length,
-      sequence: posts.map(p => p.id),
-      sequenceTypes: posts.map(p => p.type)
-    });
-  } catch (err) {
-    console.error(err);
-    app.innerHTML = `<div class="loading">This page could not load. Please return to the survey and try again.</div>`;
-  }
-}
-
-function renderPage() {
-  app.innerHTML = "";
-
-  const profile = document.createElement("section");
-  profile.className = "profile-card";
-  profile.innerHTML = `
-    <div class="banner"></div>
-    <div class="profile-main">
-      <div class="avatar-wrap">
-        ${candidate.avatar
-          ? `<img class="avatar" src="${escapeHtml(candidate.avatar)}" alt="${escapeHtml(candidate.name)}" />`
-          : `<div class="avatar" style="background:${colorFromName(candidate.name)}">${escapeHtml(initials(candidate.name))}</div>`}
-      </div>
-      <div class="profile-actions">
-        <button class="follow-btn" id="followBtn" type="button">Follow</button>
-      </div>
-      <div class="profile-copy">
-        <div class="name-row">
-          <span class="name">${escapeHtml(candidate.name)}</span>
-          <span class="handle">${escapeHtml(candidate.handle)}</span>
-        </div>
-        <div class="bio">${escapeHtml(candidate.bio)}</div>
-        <div class="profile-meta">
-          <span>${escapeHtml(candidate.location)}</span>
-          <span><strong>${escapeHtml(candidate.followers)}</strong> followers</span>
-          <span><strong>${escapeHtml(candidate.following)}</strong> following</span>
-        </div>
-        <div class="experiment-badge">Candidate page</div>
-      </div>
-    </div>
-  `;
-  app.appendChild(profile);
-
-  const followBtn = profile.querySelector("#followBtn");
-  followBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    state.followed = !state.followed;
-    followBtn.classList.toggle("following", state.followed);
-    followBtn.textContent = state.followed ? "Following" : "Follow";
-    postToQualtrics("follow_toggle", { followed: state.followed });
-  });
-
-  const feed = document.createElement("section");
-  feed.className = "feed";
-  feed.innerHTML = `<div class="feed-heading">Posts</div>`;
-  posts.forEach(post => feed.appendChild(createPost(post)));
-  app.appendChild(feed);
-}
-
-function createPost(post) {
-  const article = document.createElement("article");
-  article.className = "post";
-  article.dataset.postId = post.id;
-
-  const open = !!state.openPosts[post.id];
-
-  article.innerHTML = `
-    <button class="post-button" type="button" aria-expanded="${open}">
-      <div class="post-head">
-        <div class="mini-avatar" style="background:${colorFromName(candidate.name)}">${escapeHtml(initials(candidate.name))}</div>
-        <div class="post-meta">
-          <span class="post-author">${escapeHtml(candidate.name)}</span>
-          <span class="post-handle">${escapeHtml(candidate.handle)}</span>
-          <span class="post-time">· ${escapeHtml(post.timestamp)}</span>
-        </div>
-      </div>
-      <div class="post-text">${escapeHtml(post.text)}</div>
-      ${post.image ? `<img class="post-image" src="${escapeHtml(post.image)}" alt="" />` : ""}
-      <div class="post-footer">
-        <span>💬 ${escapeHtml(post.comments?.length || 0)}</span>
-        <span>🔁 ${escapeHtml(post.retweets || 0)}</span>
-        <span>♥ ${escapeHtml(post.likes || 0)}</span>
-      </div>
-    </button>
-  `;
-
-  const button = article.querySelector(".post-button");
-  button.addEventListener("click", () => {
-    const nowOpen = !state.openPosts[post.id];
-    state.openPosts[post.id] = nowOpen;
-    button.setAttribute("aria-expanded", String(nowOpen));
-    article.querySelectorAll(".thread").forEach(el => el.remove());
-    if (nowOpen) {
-      article.appendChild(createThread(post));
-      postToQualtrics("post_open", {
-        postId: post.id,
-        messageType: post.type,
-        position: posts.findIndex(p => p.id === post.id) + 1
-      });
-    } else {
-      postToQualtrics("post_close", { postId: post.id });
+    try {
+      window.parent.postMessage(payload, "*");
+    } catch (error) {
+      console.warn("Unable to send event to parent frame", error);
     }
-  });
+  }
 
-  return article;
-}
+  function renderCandidate() {
+    document.title = `${CANDIDATE.name} | Candidate Profile`;
+    document.getElementById("candidateAvatar").src = CANDIDATE.avatar;
+    document.getElementById("candidateAvatar").alt = CANDIDATE.name;
+    document.getElementById("candidateName").textContent = CANDIDATE.name;
+    document.getElementById("candidateHandle").textContent = CANDIDATE.handle;
+    document.getElementById("candidateBio").textContent = CANDIDATE.bio;
+    document.getElementById("followingCount").textContent = CANDIDATE.following;
+    document.getElementById("followersCount").textContent = CANDIDATE.followers;
+    document.getElementById("postCount").textContent = POSTS.length;
 
-function createThread(post) {
-  const thread = document.createElement("div");
-  thread.className = "thread";
+    const meta = document.getElementById("candidateMeta");
+    meta.innerHTML = "";
 
-  const comments = [...(post.comments || []), ...(state.comments[post.id] || []).map(text => ({
-    author: "You",
-    handle: "",
-    text,
-    user: true
-  }))];
+    const location = document.createElement("span");
+    location.textContent = `📍 ${CANDIDATE.location}`;
+    meta.appendChild(location);
 
-  const commentsHtml = comments.length
-    ? comments.map(c => `
-        <div class="comment">
-          <div class="comment-avatar" style="background:${c.user ? "#2457d6" : colorFromName(c.author)}">${escapeHtml(c.user ? "YOU" : initials(c.author))}</div>
-          <div class="comment-body">
-            <div><span class="comment-author">${escapeHtml(c.author)}</span> ${c.handle ? `<span class="comment-handle">${escapeHtml(c.handle)}</span>` : ""}</div>
-            <div class="comment-text">${escapeHtml(c.text)}</div>
-          </div>
-        </div>
-      `).join("")
-    : `<div class="empty-comments">No comments yet.</div>`;
+    const website = document.createElement("span");
+    website.textContent = `🌐 ${CANDIDATE.website}`;
+    meta.appendChild(website);
+  }
 
-  thread.innerHTML = `
-    <div class="thread-label">Comments</div>
-    <div class="thread-comments">${commentsHtml}</div>
-    <form class="reply-box">
-      <textarea placeholder="Write a reply…" aria-label="Write a reply"></textarea>
-      <div class="reply-row"><button class="reply-btn" type="submit">Reply</button></div>
-    </form>
-  `;
+  function postCard(post) {
+    const article = document.createElement("article");
+    article.className = "post-card";
+    article.dataset.postId = post.id;
+    article.dataset.postType = post.type;
 
-  thread.querySelector(".reply-box").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const textarea = thread.querySelector("textarea");
-    const text = textarea.value.trim();
-    if (!text) return;
+    const header = document.createElement("div");
+    header.className = "post-header";
 
-    state.comments[post.id] ||= [];
-    state.comments[post.id].push(text);
-    textarea.value = "";
+    const avatar = document.createElement("img");
+    avatar.className = "post-avatar";
+    avatar.src = CANDIDATE.avatar;
+    avatar.alt = CANDIDATE.name;
 
-    const refreshed = createThread(post);
-    thread.replaceWith(refreshed);
-    postToQualtrics("user_comment", {
-      postId: post.id,
-      messageType: post.type,
-      text
+    const author = document.createElement("div");
+    author.className = "post-author";
+    author.innerHTML = `<strong>${post.author}</strong>${post.verified ? '<span class="verified small">✓</span>' : ''}<span class="handle">${post.handle} · ${post.timestamp}</span>`;
+
+    header.appendChild(avatar);
+    header.appendChild(author);
+
+    const body = document.createElement("div");
+    body.className = "post-body";
+    const text = document.createElement("p");
+    text.textContent = post.text;
+    body.appendChild(text);
+
+    const actions = document.createElement("div");
+    actions.className = "post-actions";
+
+    const commentButton = makeActionButton(`💬 ${post.comments}`, "comment", post);
+    const repostButton = makeActionButton(`↻ ${post.reposts}`, "repost", post);
+    const likeButton = makeActionButton(`♡ ${post.likes}`, "like", post);
+    const expandButton = makeActionButton("View comments", "open_comments", post);
+
+    actions.append(commentButton, repostButton, likeButton, expandButton);
+
+    const comments = document.createElement("div");
+    comments.className = "comments-panel";
+    comments.hidden = true;
+
+    const commentsInner = document.createElement("div");
+    commentsInner.className = "comments-inner";
+    const commentsHeading = document.createElement("h3");
+    commentsHeading.textContent = "Comments";
+    commentsInner.appendChild(commentsHeading);
+
+    (post.commentList || []).forEach((comment) => {
+      const item = document.createElement("div");
+      item.className = "comment";
+      item.innerHTML = `<strong>${escapeHtml(comment.author)}</strong><p>${escapeHtml(comment.text)}</p>`;
+      commentsInner.appendChild(item);
     });
-  });
 
-  return thread;
-}
+    const reply = document.createElement("div");
+    reply.className = "reply-box";
+    reply.innerHTML = '<input type="text" placeholder="Reply to this post" aria-label="Reply to this post"><button type="button">Reply</button>';
+    const replyInput = reply.querySelector("input");
+    const replyButton = reply.querySelector("button");
+    replyButton.addEventListener("click", () => {
+      const value = replyInput.value.trim();
+      if (!value) return;
+      sendEvent("reply_submit", { postId: post.id, postType: post.type, textLength: value.length });
+      replyInput.value = "";
+      replyButton.textContent = "Sent";
+      setTimeout(() => { replyButton.textContent = "Reply"; }, 1200);
+    });
 
-window.addEventListener("scroll", () => {
-  const total = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
-  const depth = Math.max(0, Math.min(100, Math.round(window.scrollY / total * 100)));
-  if (!window._lastDepth || depth >= window._lastDepth + 10) {
-    window._lastDepth = depth;
-    postToQualtrics("scroll_depth", { depth });
+    commentsInner.appendChild(reply);
+    comments.appendChild(commentsInner);
+
+    body.appendChild(actions);
+    body.appendChild(comments);
+    article.append(header, body);
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !state.openedPosts.has(post.id)) {
+          state.openedPosts.add(post.id);
+          sendEvent("post_exposed", { postId: post.id, postType: post.type, topic: post.topic || null });
+        }
+      });
+    }, { threshold: 0.5 });
+
+    observer.observe(article);
+    return article;
   }
-});
 
-window.addEventListener("beforeunload", () => {
-  postToQualtrics("exposure_end", {
-    durationMs: Date.now() - state.startedAt,
-    openedPosts: Object.keys(state.openPosts).filter(id => state.openPosts[id])
-  });
-});
+  function makeActionButton(label, action, post) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.className = "action-button";
 
-window.addEventListener("message", (event) => {
-  if (event.data?.type === "QUALTRICS_SET_CONTEXT") {
-    const next = event.data.payload || {};
-    postToQualtrics("context_received", { keys: Object.keys(next) });
+    button.addEventListener("click", () => {
+      sendEvent(action, { postId: post.id, postType: post.type, topic: post.topic || null });
+
+      if (action === "open_comments") {
+        const panel = button.closest(".post-card").querySelector(".comments-panel");
+        panel.hidden = !panel.hidden;
+        button.textContent = panel.hidden ? "View comments" : "Hide comments";
+        sendEvent(panel.hidden ? "comments_closed" : "comments_opened", { postId: post.id });
+      }
+
+      if (action === "like") {
+        button.classList.toggle("active");
+      }
+    });
+
+    return button;
   }
-});
 
-boot();
+  function renderFeed() {
+    const feed = document.getElementById("feed");
+    feed.innerHTML = "";
+    POSTS.forEach((post) => feed.appendChild(postCard(post)));
+    sendEvent("feed_loaded", { postCount: POSTS.length });
+  }
+
+  function setupFollow() {
+    const button = document.getElementById("followButton");
+    button.addEventListener("click", () => {
+      state.followed = !state.followed;
+      button.textContent = state.followed ? "Following" : "Follow";
+      button.classList.toggle("following", state.followed);
+      sendEvent(state.followed ? "follow" : "unfollow", { candidate: CANDIDATE.handle });
+    });
+  }
+
+  function setupScrollLogging() {
+    let lastBucket = -1;
+    window.addEventListener("scroll", () => {
+      const doc = document.documentElement;
+      const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+      const percent = Math.min(100, Math.round((window.scrollY / maxScroll) * 100));
+      const bucket = Math.floor(percent / 10) * 10;
+      if (bucket !== lastBucket) {
+        lastBucket = bucket;
+        sendEvent("scroll_depth", { percent: bucket });
+      }
+    }, { passive: true });
+  }
+
+  function setupExitLogging() {
+    window.addEventListener("beforeunload", () => {
+      sendEvent("session_end", {
+        durationSeconds: Math.round((Date.now() - state.startTime) / 1000),
+        openedPostCount: state.openedPosts.size
+      });
+    });
+
+    window.addEventListener("pagehide", () => {
+      sendEvent("session_end", {
+        durationSeconds: Math.round((Date.now() - state.startTime) / 1000),
+        openedPostCount: state.openedPosts.size
+      });
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderCandidate();
+    renderFeed();
+    setupFollow();
+    setupScrollLogging();
+    setupExitLogging();
+    sendEvent("session_start", { candidate: CANDIDATE.handle });
+  });
+})();
