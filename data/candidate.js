@@ -2,11 +2,13 @@ const CANDIDATE = {
   name: "Alex Morgan",
   handle: "@AlexMorgan",
   verified: true,
-  avatar: "images/candidate_avatar.svg",
-  bannerClass: "default-banner",
-  bio: "Candidate for Congress. Listening, working, and building a stronger future for our community.",
-  location: "Springfield",
-  website: "alexmorgan.com",
+  party: "Democrat",
+  avatar: "images/candidate_avatar_realistic.jpg",
+  banner: "images/campaign_banner.jpg",
+  bio: "Democrat running for Congress. Fighting for working families, greater opportunity, and a more affordable future for all.",
+  location: "California",
+  website: "alexmorganforcongress.com",
+  joined: "Joined January 2024",
   following: "483",
   followers: "18.2K"
 };
