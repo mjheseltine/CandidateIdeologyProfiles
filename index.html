@@ -1,16 +1,45 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Candidate Home</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alex Morgan | Candidate Profile</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-  <main class="page-shell" id="app">
-    <div class="loading">Loading candidate profile…</div>
+  <main class="page-shell">
+    <section class="profile-card" aria-label="Candidate profile">
+      <div class="cover-banner" role="img" aria-label="Candidate campaign banner"></div>
+      <div class="profile-header">
+        <img id="candidateAvatar" class="avatar" src="images/candidate_avatar.svg" alt="Alex Morgan" />
+        <div class="profile-main">
+          <div class="profile-name-row">
+            <h1 id="candidateName">Alex Morgan</h1>
+            <span id="candidateVerified" class="verified" aria-label="Verified candidate">✓</span>
+          </div>
+          <div id="candidateHandle" class="handle">@AlexMorgan</div>
+          <p id="candidateBio" class="bio"></p>
+          <div id="candidateMeta" class="profile-meta"></div>
+        </div>
+        <button id="followButton" class="follow-button" type="button">Follow</button>
+      </div>
+      <div class="profile-stats" role="list" aria-label="Candidate statistics">
+        <div class="stat" role="listitem"><strong id="followingCount">—</strong><span>Following</span></div>
+        <div class="stat" role="listitem"><strong id="followersCount">—</strong><span>Followers</span></div>
+        <div class="stat" role="listitem"><strong id="postCount">—</strong><span>Posts</span></div>
+      </div>
+    </section>
+
+    <section class="feed-card" aria-label="Candidate posts">
+      <div class="feed-heading">
+        <h2>Posts</h2>
+      </div>
+      <div id="feed" class="feed" aria-live="polite"></div>
+    </section>
   </main>
 
+  <script src="data/candidate.js"></script>
+  <script src="posts/posts.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>
