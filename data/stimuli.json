@@ -1,0 +1,149 @@
+{
+  "feeds": {
+    "policy_weighted": {
+      "condition": "policy_weighted",
+      "description": "Policy-heavy feed: 5 policy, 3 general political, 2 partisan messages.",
+      "sequence": [
+        "m01-policy-education",
+        "m02-general-townhall",
+        "m03-policy-health",
+        "m04-general-donate",
+        "m05-policy-taxes",
+        "m06-partisan-democrat",
+        "m07-policy-climate",
+        "m08-general-vote",
+        "m09-policy-criminal-justice",
+        "m10-partisan-trump"
+      ]
+    }
+  },
+  "messages": [
+    {
+      "id": "m01-policy-education",
+      "type": "policy",
+      "timestamp": "2h",
+      "text": "I support expanding school voucher programs so parents have more choices about where their children attend school.",
+      "likes": 642,
+      "retweets": 91,
+      "comments": [
+        {"author": "Jordan Lee", "handle": "@jordanlee", "text": "Choice is good, but public schools need support too."},
+        {"author": "Maya R.", "handle": "@mayar", "text": "More options would help families who feel stuck."},
+        {"author": "Sam Carter", "handle": "@samc", "text": "I'd want to know how the program would be funded."}
+      ]
+    },
+    {
+      "id": "m02-general-townhall",
+      "type": "general",
+      "timestamp": "5h",
+      "text": "Thanks to everyone who came to tonight's town hall. I heard a lot of good questions, and I am taking your concerns back to the campaign team.",
+      "likes": 388,
+      "retweets": 44,
+      "comments": [
+        {"author": "Riverton Parent", "handle": "@rivparent", "text": "Appreciated the chance to ask about local schools."},
+        {"author": "Chris D.", "handle": "@chrisd", "text": "Good turnout tonight."}
+      ]
+    },
+    {
+      "id": "m03-policy-health",
+      "type": "policy",
+      "timestamp": "7h",
+      "text": "I want to protect Medicare and lower prescription drug costs by allowing the federal government to negotiate prices for more medications.",
+      "likes": 711,
+      "retweets": 116,
+      "comments": [
+        {"author": "Elena", "handle": "@elenam", "text": "Lower drug prices would make a huge difference for my parents."},
+        {"author": "Pat R.", "handle": "@patr", "text": "What happens to new drug development?"},
+        {"author": "Nate W.", "handle": "@natew", "text": "This is a practical idea if the savings are real."}
+      ]
+    },
+    {
+      "id": "m04-general-donate",
+      "type": "general",
+      "timestamp": "10h",
+      "text": "We are getting close to the end of the month. Every small donation helps us keep the campaign on the road and talking with voters across the district.",
+      "likes": 201,
+      "retweets": 37,
+      "comments": [
+        {"author": "Liam", "handle": "@liamk", "text": "Just chipped in for the first time."},
+        {"author": "Avery", "handle": "@averyp", "text": "Keep going!"}
+      ]
+    },
+    {
+      "id": "m05-policy-taxes",
+      "type": "policy",
+      "timestamp": "12h",
+      "text": "I support a higher tax rate on very high incomes while keeping taxes lower for middle-income families and small businesses.",
+      "likes": 529,
+      "retweets": 83,
+      "comments": [
+        {"author": "Dylan", "handle": "@dylanm", "text": "Targeting the very top seems fair to me."},
+        {"author": "Grace", "handle": "@gracel", "text": "Would this apply to small business owners too?"},
+        {"author": "R. Taylor", "handle": "@rtaylor", "text": "The details on brackets would matter."}
+      ]
+    },
+    {
+      "id": "m06-partisan-democrat",
+      "type": "partisan",
+      "timestamp": "15h",
+      "text": "I am proud to be a Democrat. Our party believes government can be a force for expanding opportunity and protecting working families.",
+      "likes": 954,
+      "retweets": 188,
+      "comments": [
+        {"author": "Taylor", "handle": "@taylorr", "text": "Glad to see candidates own their party label."},
+        {"author": "Morgan K.", "handle": "@mkpolitics", "text": "Party labels do not tell me enough on their own."},
+        {"author": "Dee", "handle": "@deej", "text": "Proud Democrat too."}
+      ]
+    },
+    {
+      "id": "m07-policy-climate",
+      "type": "policy",
+      "timestamp": "18h",
+      "text": "I support expanding clean-energy incentives to speed up the transition away from fossil fuels and create more jobs in clean manufacturing.",
+      "likes": 476,
+      "retweets": 72,
+      "comments": [
+        {"author": "Casey", "handle": "@caseyk", "text": "Job creation is the strongest part of this argument."},
+        {"author": "Jordan", "handle": "@jordanp", "text": "How quickly could this scale?"},
+        {"author": "M. Stone", "handle": "@mstone", "text": "I care most about the cost to households."}
+      ]
+    },
+    {
+      "id": "m08-general-vote",
+      "type": "general",
+      "timestamp": "1d",
+      "text": "Election Day is coming up. Make a plan to vote, remind a friend or neighbor, and check the latest information from your local election office.",
+      "likes": 822,
+      "retweets": 142,
+      "comments": [
+        {"author": "Jules", "handle": "@julesr", "text": "My family is voting early this year."},
+        {"author": "Ben", "handle": "@benp", "text": "Already made my plan."}
+      ]
+    },
+    {
+      "id": "m09-policy-criminal-justice",
+      "type": "policy",
+      "timestamp": "1d",
+      "text": "I support expanding community-based alternatives to incarceration for low-level, nonviolent offenses while focusing prison resources on serious violent crime.",
+      "likes": 414,
+      "retweets": 63,
+      "comments": [
+        {"author": "Chris", "handle": "@chrisb", "text": "Evidence-based reforms make sense to me."},
+        {"author": "Nina", "handle": "@ninap", "text": "I would want strong accountability measures too."},
+        {"author": "Alex J.", "handle": "@alexj", "text": "Public safety has to stay the priority."}
+      ]
+    },
+    {
+      "id": "m10-partisan-trump",
+      "type": "partisan",
+      "timestamp": "2d",
+      "text": "I have never supported Donald Trump, and I will not be afraid to push back when his agenda conflicts with what I believe is best for our communities.",
+      "likes": 1011,
+      "retweets": 247,
+      "comments": [
+        {"author": "Erin", "handle": "@erinm", "text": "Thank you for saying it plainly."},
+        {"author": "Cole", "handle": "@colem", "text": "This tells me more about party than policy does."},
+        {"author": "Riley", "handle": "@rileys", "text": "I disagree, but at least the position is clear."}
+      ]
+    }
+  ]
+}

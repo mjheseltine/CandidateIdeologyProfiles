@@ -1,0 +1,14 @@
+{
+  "candidates": [
+    {
+      "id": "alex-morgan",
+      "name": "Alex Morgan",
+      "handle": "@alexmorgan",
+      "bio": "Candidate for Congress. Focused on making communities safer, expanding opportunity, and making government work for working families.",
+      "location": "Riverton",
+      "followers": "18.4K",
+      "following": "1,102",
+      "avatar": "images/candidate_avatar.svg"
+    }
+  ]
+}
