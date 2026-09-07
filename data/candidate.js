@@ -3,7 +3,7 @@ const CANDIDATE = {
   handle: "@AlexMorgan",
   verified: true,
   party: "Democrat",
-  avatar: "images/candidate_avatar_realistic.jpg",
+  avatar: "images/candidate_avatar_clean.jpg",
   banner: "images/campaign_banner.jpg",
   bio: "Democrat running for Congress. Fighting for working families, greater opportunity, and a more affordable future for all.",
   location: "California",
