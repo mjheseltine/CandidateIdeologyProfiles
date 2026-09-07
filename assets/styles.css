@@ -45,7 +45,7 @@ button { cursor: pointer; }
 .cover-banner {
   height: 210px;
   background-position: center;
-  background-size: cover;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   position: relative;
 }
@@ -192,8 +192,8 @@ button { cursor: pointer; }
   justify-content: space-between;
   max-width: 520px;
 }
-.action-button {
-  min-width: 58px;
+ .action-button {
+  min-width: 76px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -210,7 +210,8 @@ button { cursor: pointer; }
 .action-button.active { background: var(--soft); color: var(--accent-dark); }
 .action-button.active-like { color: var(--danger); background: #fff0f3; }
 .action-button.active-repost { color: var(--success); background: #edf9f3; }
-.action-icon { font-size: 1.1rem; line-height: 1; }
+.action-icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+.action-icon svg { width: 18px; height: 18px; display: block; }
 .action-value { font-variant-numeric: tabular-nums; }
 
 .comments-panel { margin-top: 12px; border-top: 1px solid var(--line); }
@@ -278,5 +279,5 @@ button { cursor: pointer; }
   .post-card { padding: 16px; }
   .post-body { padding-left: 0; }
   .post-actions { max-width: none; }
-  .action-button { min-width: 50px; padding-inline: 6px; }
+  .action-button { min-width: 64px; padding-inline: 6px; }
 }

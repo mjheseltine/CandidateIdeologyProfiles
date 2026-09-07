@@ -1,6 +1,13 @@
 (function () {
   "use strict";
 
+  const ICONS = {
+    like: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2S4.4 16.5 2.5 11.5C.7 6.6 4.2 3 8.2 3c1.9 0 3.2 1 3.8 2.1C12.6 4 13.9 3 15.8 3c4 0 7.5 3.6 5.7 8.5C19.6 16.5 12 21.2 12 21.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    liked: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2S4.4 16.5 2.5 11.5C.7 6.6 4.2 3 8.2 3c1.9 0 3.2 1 3.8 2.1C12.6 4 13.9 3 15.8 3c4 0 7.5 3.6 5.7 8.5C19.6 16.5 12 21.2 12 21.2Z" fill="currentColor"/></svg>',
+    repost: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3M18 7a5 5 0 0 1 2 4M6 17a5 5 0 0 1-2-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    comment: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 11.1c0 4.5-4 7.6-8.7 7.6-1.1 0-2.1-.2-3-.5L4 20l1.1-3.6c-.9-1.2-1.4-2.8-1.4-4.4 0-4.5 3.5-7.8 8-7.8s8.5 2.4 8.5 6.9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+  };
+
   const state = {
     sessionId: "session-" + Math.random().toString(36).slice(2, 11),
     startTime: Date.now(),
@@ -34,7 +41,6 @@
     };
 
     state.events.push(payload);
-
     try {
       window.parent.postMessage(payload, "*");
     } catch (error) {
@@ -59,18 +65,14 @@
 
     const meta = document.getElementById("candidateMeta");
     meta.innerHTML = "";
-
     const location = document.createElement("span");
     location.textContent = `📍 ${CANDIDATE.location}`;
-
     const website = document.createElement("span");
     website.textContent = `🔗 ${CANDIDATE.website}`;
-
     meta.append(location, website);
 
     const banner = document.getElementById("campaignBanner");
     banner.style.backgroundImage = `url("${CANDIDATE.banner}")`;
-    banner.setAttribute("aria-label", `${CANDIDATE.name} campaign banner`);
   }
 
   function makeAvatar(className = "post-avatar") {
@@ -90,36 +92,33 @@
 
     const iconSpan = document.createElement("span");
     iconSpan.className = "action-icon";
-    iconSpan.textContent = icon;
+    iconSpan.innerHTML = icon;
 
     const valueSpan = document.createElement("span");
     valueSpan.className = "action-value";
     valueSpan.textContent = value;
 
     button.append(iconSpan, valueSpan);
-
-    button.addEventListener("click", () => {
-      handleAction(button, action, post);
-    });
-
+    button.addEventListener("click", () => handleAction(button, action, post));
     return button;
   }
 
   function refreshEngagementButton(button, action, post) {
     const data = getPostState(post);
     const valueSpan = button.querySelector(".action-value");
-    if (!valueSpan) return;
+    const iconSpan = button.querySelector(".action-icon");
+    if (!valueSpan || !iconSpan) return;
 
     if (action === "like") {
       button.classList.toggle("active-like", data.liked);
-      button.querySelector(".action-icon").textContent = data.liked ? "♥" : "♡";
+      iconSpan.innerHTML = data.liked ? ICONS.liked : ICONS.like;
       valueSpan.textContent = data.likes;
       button.setAttribute("aria-label", `${data.liked ? "Unlike" : "Like"} this post (${data.likes})`);
     }
 
     if (action === "repost") {
       button.classList.toggle("active-repost", data.reposted);
-      button.querySelector(".action-icon").textContent = "↻";
+      iconSpan.innerHTML = ICONS.repost;
       valueSpan.textContent = data.reposts;
       button.setAttribute("aria-label", `${data.reposted ? "Undo repost" : "Repost"} this post (${data.reposts})`);
     }
@@ -129,6 +128,7 @@
     const data = getPostState(post);
     const valueSpan = button.querySelector(".action-value");
     if (valueSpan) valueSpan.textContent = data.comments;
+    button.setAttribute("aria-label", `View comments (${data.comments})`);
   }
 
   function handleAction(button, action, post) {
@@ -165,15 +165,12 @@
       const panel = card.querySelector(".comments-panel");
       const nowOpen = panel.hidden;
       panel.hidden = !panel.hidden;
-      button.closest(".post-actions").querySelector('[data-action="comment"]').classList.toggle("active", nowOpen);
-      sendEvent(nowOpen ? "comments_opened" : "comments_closed", { postId: post.id, postType: post.type });
+      button.classList.toggle("active", nowOpen);
+      sendEvent(nowOpen ? "comments_opened" : "comments_closed", {
+        postId: post.id,
+        postType: post.type
+      });
       return;
-    }
-
-    if (action === "share") {
-      sendEvent("share", { postId: post.id, postType: post.type, topic: post.topic || null });
-      button.classList.add("active");
-      setTimeout(() => button.classList.remove("active"), 700);
     }
   }
 
@@ -183,11 +180,7 @@
 
     const avatarWrap = document.createElement("div");
     avatarWrap.className = "comment-avatar";
-    if (isUser) {
-      avatarWrap.textContent = "M";
-    } else {
-      avatarWrap.textContent = String(comment.author || "?").trim().charAt(0).toUpperCase();
-    }
+    avatarWrap.textContent = isUser ? "M" : String(comment.author || "?").trim().charAt(0).toUpperCase();
 
     const content = document.createElement("div");
     content.className = "comment-content";
@@ -214,16 +207,10 @@
     const list = commentsInner.querySelector(".comment-list");
     list.innerHTML = "";
 
-    (post.commentList || []).forEach((comment) => {
-      list.appendChild(buildComment(comment, false));
-    });
+    (post.commentList || []).forEach((comment) => list.appendChild(buildComment(comment, false)));
+    data.userComments.forEach((comment) => list.appendChild(buildComment(comment, true)));
 
-    data.userComments.forEach((comment) => {
-      list.appendChild(buildComment(comment, true));
-    });
-
-    const heading = commentsInner.querySelector(".comments-heading");
-    heading.textContent = `Comments (${data.comments})`;
+    commentsInner.querySelector(".comments-heading").textContent = `Comments (${data.comments})`;
   }
 
   function postCard(post) {
@@ -255,12 +242,10 @@
     handle.className = "handle";
     handle.textContent = `${post.handle} · ${post.timestamp}`;
     author.appendChild(handle);
-
     header.appendChild(author);
 
     const body = document.createElement("div");
     body.className = "post-body";
-
     const text = document.createElement("p");
     text.className = "post-text";
     text.textContent = post.text;
@@ -269,14 +254,15 @@
     const actions = document.createElement("div");
     actions.className = "post-actions";
 
-    const commentButton = makeButton({ action: "comment", label: `View comments (${data.comments})`, icon: "♡", value: data.comments, post });
-    const repostButton = makeButton({ action: "repost", label: `Repost this post (${data.reposts})`, icon: "↻", value: data.reposts, post });
-    const likeButton = makeButton({ action: "like", label: `Like this post (${data.likes})`, icon: "♡", value: data.likes, post });
-    const shareButton = makeButton({ action: "share", label: "Share this post", icon: "↗", value: "", post });
+    // Deliberately in platform-standard order: Like, Repost, Comment.
+    const likeButton = makeButton({ action: "like", label: `Like this post (${data.likes})`, icon: ICONS.like, value: data.likes, post });
+    const repostButton = makeButton({ action: "repost", label: `Repost this post (${data.reposts})`, icon: ICONS.repost, value: data.reposts, post });
+    const commentButton = makeButton({ action: "comment", label: `View comments (${data.comments})`, icon: ICONS.comment, value: data.comments, post });
 
-    refreshEngagementButton(repostButton, "repost", post);
     refreshEngagementButton(likeButton, "like", post);
-    actions.append(commentButton, repostButton, likeButton, shareButton);
+    refreshEngagementButton(repostButton, "repost", post);
+    refreshCommentButton(commentButton, post);
+    actions.append(likeButton, repostButton, commentButton);
 
     const comments = document.createElement("div");
     comments.className = "comments-panel";
@@ -284,7 +270,6 @@
 
     const commentsInner = document.createElement("div");
     commentsInner.className = "comments-inner";
-
     const commentsHeading = document.createElement("h3");
     commentsHeading.className = "comments-heading";
     commentsInner.appendChild(commentsHeading);
@@ -309,7 +294,6 @@
     const replyButton = document.createElement("button");
     replyButton.type = "submit";
     replyButton.textContent = "Post";
-
     reply.append(replyAvatar, replyInput, replyButton);
 
     reply.addEventListener("submit", (event) => {
@@ -317,10 +301,8 @@
       const value = replyInput.value.trim();
       if (!value) return;
 
-      const userComment = { text: value };
-      data.userComments.push(userComment);
+      data.userComments.push({ text: value });
       data.comments += 1;
-
       renderComments(post, commentsInner);
       refreshCommentButton(commentButton, post);
       replyInput.value = "";
@@ -339,7 +321,6 @@
     commentsInner.appendChild(reply);
     comments.appendChild(commentsInner);
     renderComments(post, commentsInner);
-
     body.append(actions, comments);
     article.append(header, body);
 
@@ -358,7 +339,6 @@
         }
       });
     }, { threshold: 0.5 });
-
     observer.observe(article);
     return article;
   }
