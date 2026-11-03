@@ -1,49 +1,32 @@
-# Candidate ideology social profile — three-condition prototype
+# Candidate Ideology Profiles — two-party social feed
 
-This is a complete static GitHub Pages site based on the uploaded CandidateIdeologyProfiles repository. No build process is needed.
+Static GitHub Pages site. Upload the **contents** of this folder to the root of your GitHub repository.
 
-## Preview
+## Preview URLs
 
-- `index.html?condition=policy` — 5 policy, 2 partisan, 3 general
-- `index.html?condition=partisan` — 2 policy, 5 partisan, 3 general
-- `index.html?condition=general` — 2 policy, 2 partisan, 6 general
+- `?party=dem&condition=policy`
+- `?party=dem&condition=partisan`
+- `?party=dem&condition=general`
+- `?party=rep&condition=policy`
+- `?party=rep&condition=partisan`
+- `?party=rep&condition=general`
 
-Without a query parameter, the page defaults to **policy** for convenient preview. Unknown values also fall back to policy with a console warning; in a real experiment, ensure Qualtrics always passes a valid condition.
+Defaults are `dem` and `policy` when omitted. Invalid values also fall back to these preview defaults and emit a console warning; in production Qualtrics should always supply valid values.
 
-## Files
+## Experiment logic
 
-- `index.html` — candidate profile page
-- `data/candidate.js` — candidate identity and profile information
-- `posts/posts.js` — **single stimulus bank**, including example comments and engagement counts
-- `assets/feed-generator.js` — condition templates and deterministic selection
-- `assets/app.js` — UI, interactions, exposure and event logging
-- `assets/styles.css` and `images/` — appearance
-- `qualtrics-listener.js` — **example code for the Qualtrics parent page**, not loaded by the website
+`posts/posts.js` is the shared stimulus bank, tagged `party` (`dem`/`rep`) and `type` (`policy`/`partisan`/`general`). `assets/feed-generator.js` filters by party and applies a fixed 10-post interleaving template. Counts: policy arm 5/2/3; partisan arm 2/5/3; general arm 2/2/6 (policy/partisan/general). The bank currently contains 16 posts per party: 5 policy, 5 partisan, 6 general. Selection is deterministic and the same within a party/condition.
 
-The existing first ten posts were retained. Six extra **draft** messages were added to supply sufficient partisan/general content. All stimuli need substantive review and pretesting before fielding. The bank deliberately includes some policy/partisan cues that may be inconsistent with the Democrat profile; review ideological coherence before production.
+`data/candidate.js` contains both candidate profiles. Alex Morgan is the Democrat; Jordan Ellis is the provisional Republican. The Republican portrait is **a clearly labeled placeholder** and should be replaced before a live study. The Republican banner is a distinct SVG campaign graphic.
 
-## How feeds are selected
+## Qualtrics
 
-`FEED_GENERATOR.selectFeed(condition, POSTS)` uses the ordered type template in `assets/feed-generator.js`, then takes the next unused post of each type from the stimulus bank. Selection is **deterministic**: everyone assigned the same condition sees the same post IDs in the same order. This controls wording/order within condition; it does not randomly sample individual messages. To change content, edit the bank and/or template. Every displayed post has a stable ID.
+Randomize **platform** and **condition** between respondents, and counterbalance **party order** within respondent. Both evaluations should use the same `condition`, with `party` switched between `dem` and `rep`. E.g. iframe URL:
 
-## Qualtrics setup
+`https://YOUR-USERNAME.github.io/YOUR-REPO/?party=${e://Field/CurrentParty}&condition=${e://Field/condition}`
 
-1. In Survey Flow, before the iframe question, add a Randomizer that presents **one of three Embedded Data elements** evenly: `condition=policy`, `condition=partisan`, or `condition=general`.
-2. Embed the GitHub Pages site in a Qualtrics question using the iframe below (replace username/repository):
+Set `CurrentParty` separately before each evaluation. Keep outcome variables distinct (e.g. `DEM_Ideology`, `REP_Ideology`). The iframe emits `CANDIDATE_FEED_EVENT` messages including `party`, `condition`, and post metadata. `qualtrics-listener.js` is an example for the **parent Qualtrics question**; update `ALLOWED_ORIGIN` and configure the Embedded Data fields. Do not include the listener inside the iframe page. Test saving events across both candidate evaluations; avoid overwriting party-specific data.
 
-```html
-<iframe title="Candidate profile" src="https://YOUR-USERNAME.github.io/CandidateIdeologyProfiles/?condition=${e://Field/condition}" width="100%" height="850" style="border:0" loading="eager"></iframe>
-```
+## Research caveats
 
-3. For interaction capture, adapt `qualtrics-listener.js` into the **parent Qualtrics question JavaScript**. Set `ALLOWED_ORIGIN` to your GitHub Pages origin. Create the relevant `CF_` Embedded Data fields in Survey Flow before the question. Test in a real Qualtrics preview and export a test response before fielding.
-4. Note that URL parameters are visible to participants; assignment must occur in Qualtrics, and the exported assigned condition is the source of truth. The iframe is a static site and is not a secure server-side assignment mechanism.
-
-## Event data
-
-Every `CANDIDATE_FEED_EVENT` includes `condition` and `feedVersion`. `feed_loaded` and `session_start` include the post ID sequence. Individual engagement events include `postId` and `postType`. `post_exposed` fires on first 50% intersection (not guaranteed attention); `session_end` via unload is best-effort. Comments typed by respondents appear immediately in the thread, but their text is **not** sent to Qualtrics (only length). This is deliberate for the prototype.
-
-**Research caveats:** A message category's raw engagement count will reflect its exposure frequency. For analysis, normalize engagement by the number of posts shown and/or actually viewed. Baseline likes/comments are illustrative and differ across stimuli, so they may independently cue salience. Qualtrics Embedded Data can truncate long logs: use a bounded summary or tested server-side logging before production. The website platform arm is not included in this ZIP.
-
-## Local test
-
-From the repository folder run `python3 -m http.server 8000`, then open `http://localhost:8000/?condition=partisan`. For GitHub Pages, upload the contents of this folder to the repository root and enable Pages from the main branch.
+All posts are draft stimuli, not validated ideological cues. Review wording, equivalence, and comment effects before fielding. Interactions are in-memory and reset on reload. No backend is required for the preview. This package has static checks but has not been tested in a live Qualtrics environment.

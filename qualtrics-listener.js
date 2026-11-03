@@ -16,6 +16,7 @@
     if (typeof Qualtrics === "undefined" || !Qualtrics.SurveyEngine) return;
     const set = (key, value) => Qualtrics.SurveyEngine.setEmbeddedData(key, String(value));
     set("CF_Condition", data.condition || "");
+    set("CF_Party", data.party || "");
     set("CF_FeedVersion", data.feedVersion || "");
     set("CF_LastEvent", data.event || "");
     if (data.postSequence) set("CF_PostSequence", JSON.stringify(data.postSequence));
