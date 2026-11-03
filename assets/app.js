@@ -8,6 +8,14 @@
     comment: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 11.1c0 4.5-4 7.6-8.7 7.6-1.1 0-2.1-.2-3-.5L4 20l1.1-3.6c-.9-1.2-1.4-2.8-1.4-4.4 0-4.5 3.5-7.8 8-7.8s8.5 2.4 8.5 6.9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
   };
 
+  const params = new URLSearchParams(window.location.search);
+  const requestedCondition = params.get("condition") || "policy";
+  const validConditions = ["policy", "partisan", "general"];
+  const condition = validConditions.includes(requestedCondition) ? requestedCondition : "policy";
+  const invalidCondition = !validConditions.includes(requestedCondition);
+  const feedDefinition = FEED_GENERATOR.selectFeed(condition, POSTS);
+  const DISPLAY_POSTS = feedDefinition.posts;
+
   const state = {
     sessionId: "session-" + Math.random().toString(36).slice(2, 11),
     startTime: Date.now(),
@@ -36,6 +44,8 @@
       type: "CANDIDATE_FEED_EVENT",
       event,
       sessionId: state.sessionId,
+      condition: feedDefinition.condition,
+      feedVersion: feedDefinition.version,
       timestamp: new Date().toISOString(),
       ...details
     };
@@ -60,7 +70,7 @@
     document.getElementById("candidateBio").textContent = CANDIDATE.bio;
     document.getElementById("followingCount").textContent = CANDIDATE.following;
     document.getElementById("followersCount").textContent = CANDIDATE.followers;
-    document.getElementById("postCount").textContent = POSTS.length;
+    document.getElementById("postCount").textContent = DISPLAY_POSTS.length;
     document.getElementById("candidateJoined").textContent = CANDIDATE.joined;
 
     const meta = document.getElementById("candidateMeta");
@@ -346,10 +356,11 @@
   function renderFeed() {
     const feed = document.getElementById("feed");
     feed.innerHTML = "";
-    POSTS.forEach((post) => feed.appendChild(postCard(post)));
+    DISPLAY_POSTS.forEach((post) => feed.appendChild(postCard(post)));
     sendEvent("feed_loaded", {
-      postCount: POSTS.length,
-      postTypes: POSTS.reduce((counts, post) => {
+      postCount: DISPLAY_POSTS.length,
+      postSequence: feedDefinition.sequence,
+      postTypes: DISPLAY_POSTS.reduce((counts, post) => {
         counts[post.type] = (counts[post.type] || 0) + 1;
         return counts;
       }, {})
@@ -393,11 +404,12 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    if (invalidCondition) console.warn("Unknown condition; previewing policy condition instead.");
     renderCandidate();
     renderFeed();
     setupFollow();
     setupScrollLogging();
     setupExitLogging();
-    sendEvent("session_start", { candidate: CANDIDATE.handle, party: CANDIDATE.party });
+    sendEvent("session_start", { candidate: CANDIDATE.handle, party: CANDIDATE.party, postSequence: feedDefinition.sequence, postTypes: feedDefinition.counts, invalidCondition });
   });
 })();
