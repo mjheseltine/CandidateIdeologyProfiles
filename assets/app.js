@@ -10,10 +10,15 @@
 
   const params = new URLSearchParams(window.location.search);
   const requestedCondition = params.get("condition") || "policy";
+  const requestedParty = params.get("party") || "dem";
+  const validParties = ["dem", "rep"];
+  const party = validParties.includes(requestedParty) ? requestedParty : "dem";
+  const invalidParty = !validParties.includes(requestedParty);
+  const CANDIDATE = CANDIDATES[party];
   const validConditions = ["policy", "partisan", "general"];
   const condition = validConditions.includes(requestedCondition) ? requestedCondition : "policy";
   const invalidCondition = !validConditions.includes(requestedCondition);
-  const feedDefinition = FEED_GENERATOR.selectFeed(condition, POSTS);
+  const feedDefinition = FEED_GENERATOR.selectFeed(condition, POSTS, party);
   const DISPLAY_POSTS = feedDefinition.posts;
 
   const state = {
@@ -45,6 +50,7 @@
       event,
       sessionId: state.sessionId,
       condition: feedDefinition.condition,
+      party: feedDefinition.party,
       feedVersion: feedDefinition.version,
       timestamp: new Date().toISOString(),
       ...details
@@ -405,11 +411,12 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     if (invalidCondition) console.warn("Unknown condition; previewing policy condition instead.");
+    if (invalidParty) console.warn("Unknown party; previewing Democratic candidate instead.");
     renderCandidate();
     renderFeed();
     setupFollow();
     setupScrollLogging();
     setupExitLogging();
-    sendEvent("session_start", { candidate: CANDIDATE.handle, party: CANDIDATE.party, postSequence: feedDefinition.sequence, postTypes: feedDefinition.counts, invalidCondition });
+    sendEvent("session_start", { candidate: CANDIDATE.handle, party: CANDIDATE.party, postSequence: feedDefinition.sequence, postTypes: feedDefinition.counts, invalidCondition, invalidParty });
   });
 })();
