@@ -181,6 +181,36 @@ const POSTS = [
       { author: "Chris J.", text: "I disagree with the partisan framing." }
     ]
   }
+  ,{
+    id: 11, type: "partisan", topic: "party", ideology: "left", author: "Alex Morgan", handle: "@AlexMorgan", verified: true, timestamp: "1w", likes: 305, reposts: 43, comments: 24,
+    text: "I'm proud to be a Democrat, and I'm grateful to the Democratic volunteers helping us reach voters across the district.",
+    commentList: [{author:"Casey L.",text:"Glad to see people getting involved."},{author:"Robin M.",text:"I care more about results than labels."}]
+  },
+  {
+    id: 12, type: "partisan", topic: "party", ideology: "left", author: "Alex Morgan", handle: "@AlexMorgan", verified: true, timestamp: "1w", likes: 382, reposts: 56, comments: 39,
+    text: "This election is a chance to elect more Democrats who will stand up for our communities in Congress.",
+    commentList: [{author:"Jamie P.",text:"We need more people voting."},{author:"Terry S.",text:"I'd like to hear more about your plans."}]
+  },
+  {
+    id: 13, type: "partisan", topic: "opposition", ideology: "left", author: "Alex Morgan", handle: "@AlexMorgan", verified: true, timestamp: "2w", likes: 411, reposts: 64, comments: 46,
+    text: "I disagree with Donald Trump's approach to governing. We need a different direction in Washington.",
+    commentList: [{author:"Morgan T.",text:"I agree."},{author:"Drew A.",text:"What would you do differently?"}]
+  },
+  {
+    id: 14, type: "general", topic: "volunteering", author: "Alex Morgan", handle: "@AlexMorgan", verified: true, timestamp: "1w", likes: 119, reposts: 10, comments: 8,
+    text: "We're knocking on doors this Saturday. Sign up to volunteer and help us talk to neighbors across the district.",
+    commentList: [{author:"Parker J.",text:"See you Saturday!"},{author:"Devon R.",text:"Where is the meeting point?"}]
+  },
+  {
+    id: 15, type: "general", topic: "campaign", author: "Alex Morgan", handle: "@AlexMorgan", verified: true, timestamp: "1w", likes: 143, reposts: 13, comments: 11,
+    text: "It was wonderful meeting so many people at the community festival this weekend. Thanks for stopping by our table!",
+    commentList: [{author:"Leslie B.",text:"Great to meet the team."},{author:"Quinn H.",text:"Lovely event!"}]
+  },
+  {
+    id: 16, type: "general", topic: "donation", author: "Alex Morgan", handle: "@AlexMorgan", verified: true, timestamp: "2w", likes: 102, reposts: 9, comments: 7,
+    text: "Our next fundraising deadline is approaching. Every contribution helps us keep the campaign moving.",
+    commentList: [{author:"Avery C.",text:"Thanks for the update."},{author:"Jules D.",text:"Good luck!"}]
+  }
 ];
 
 function getPosts() {
