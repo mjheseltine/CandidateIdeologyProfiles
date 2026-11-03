@@ -1,37 +1,30 @@
-/*
-  Add this to the Qualtrics page (outside the iframe) if you want to
-  capture events as Embedded Data.
-
-  In Qualtrics, create Embedded Data fields matching the names below.
-  Because a participant can generate many events, this example stores
-  a compact JSON event log plus a few summary fields.
-*/
-
+/* Qualtrics-side example: paste into the iframe question's JavaScript, inside addOnload.
+   Set ALLOWED_ORIGIN to your real GitHub Pages origin before fielding.
+   Register Embedded Data names in Survey Flow before the question.
+   Qualtrics can impose size limits; avoid storing an unlimited event log in production. */
 (function () {
+  "use strict";
+  const ALLOWED_ORIGIN = "https://YOUR-USERNAME.github.io"; // CHANGE ME
   const events = [];
-  let lastEvent = null;
-
+  const counts = { like: 0, repost: 0, comments_opened: 0, reply_submit: 0 };
   window.addEventListener("message", function (message) {
+    if (message.origin !== ALLOWED_ORIGIN) return;
     const data = message.data;
     if (!data || data.type !== "CANDIDATE_FEED_EVENT") return;
-
+    if (Object.prototype.hasOwnProperty.call(counts, data.event)) counts[data.event]++;
     events.push(data);
-    lastEvent = data;
-
     if (typeof Qualtrics === "undefined" || !Qualtrics.SurveyEngine) return;
-
-    try {
-      const api = Qualtrics.SurveyEngine.getInstance();
-      api.setEmbeddedData("CF_LastEvent", data.event || "");
-      api.setEmbeddedData("CF_EventLog", JSON.stringify(events));
-
-      if (data.postType) api.setEmbeddedData("CF_LastPostType", data.postType);
-      if (data.postId !== undefined) api.setEmbeddedData("CF_LastPostId", String(data.postId));
-      if (data.percent !== undefined) api.setEmbeddedData("CF_ScrollDepth", String(data.percent));
-      if (data.openedPostCount !== undefined) api.setEmbeddedData("CF_OpenedPostCount", String(data.openedPostCount));
-      if (data.durationSeconds !== undefined) api.setEmbeddedData("CF_DurationSeconds", String(data.durationSeconds));
-    } catch (error) {
-      console.warn("Qualtrics Embedded Data update failed", error);
-    }
+    const set = (key, value) => Qualtrics.SurveyEngine.setEmbeddedData(key, String(value));
+    set("CF_Condition", data.condition || "");
+    set("CF_FeedVersion", data.feedVersion || "");
+    set("CF_LastEvent", data.event || "");
+    if (data.postSequence) set("CF_PostSequence", JSON.stringify(data.postSequence));
+    if (data.postId !== undefined) set("CF_LastPostId", data.postId);
+    if (data.percent !== undefined) set("CF_ScrollDepth", data.percent);
+    if (data.openedPostCount !== undefined) set("CF_OpenedPostCount", data.openedPostCount);
+    if (data.durationSeconds !== undefined) set("CF_DurationSeconds", data.durationSeconds);
+    for (const [event, n] of Object.entries(counts)) set("CF_" + event, n);
+    // For small pilots only: may exceed Embedded Data limits in long sessions.
+    set("CF_EventLog", JSON.stringify(events));
   });
 })();
